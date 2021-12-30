@@ -38,7 +38,7 @@ function setListeners() {
             inputs.top = true;
         if (e.key === "s")
             inputs.bottom = true;
-        console.log(e.key);
+        // console.log(e.key);
     });
     window.addEventListener("keyup", (e) => {
         if (e.key === "q")
@@ -127,9 +127,9 @@ class PVector {
 }
 class Mover {
     constructor(id = null) {
-        console.log('Constructeur mover');
+        // console.log('Constructeur mover');
         this.locat = new PVector(random(0, canvas.width), random(0, canvas.height));
-        this.velocity = new PVector(0, 0);
+        this.velocity = new PVector();
         this.acceleration = new PVector();
         this.topSpeed = 5;
         this.dir = new PVector();
@@ -137,34 +137,7 @@ class Mover {
         this.id = id;
     }
     update() {
-        /*
-        // INPUT CONTROL
-        // if (inputs.left) {
-        //     this.velocity.add({x: -this.acceleration.x, y: 0});
-        //     console.log(this.acceleration.x, -this.acceleration.x);
-        // }
-        // if (inputs.right) {
-        //     this.velocity.add({x: this.acceleration.x, y: 0});
-        // }
-        // if (inputs.top) {
-        //     this.velocity.add({x: 0, y: -this.acceleration.y});
-        //     console.log(this.acceleration.x, -this.acceleration.x);
-        // }
-        // if (inputs.bottom) {
-        //     this.velocity.add({x: 0, y: this.acceleration.y});
-        // }
-        */
-        // this.mouse = new PVector(mouse.x, mouse.y);
-        // this.dir = PVector.subi(this.mouse, this.locat);
-        let randomDir = new PVector();
-        randomDir.random2D();
-        this.dir = PVector.subi(randomDir, this.locat);
-        this.dir.normalize();
-        this.dir.mult(0.02);
-        this.acceleration = this.dir;
-        this.velocity.add(this.acceleration);
-        this.velocity.limit(this.topSpeed);
-        this.locat.add(this.velocity);
+        // this.mouse.set(new PVector(mouse.x, mouse.y));
     }
     checkEdges() {
         if (this.locat.x > canvas.width) {
@@ -228,12 +201,9 @@ class Player extends Mover {
         super();
         this.isMoving = false;
         this.range = 100;
+        // this.mouse.set(new PVector(mouse.x, mouse.y));
     }
     move() {
-        let randomDir = new PVector();
-        randomDir.random2D();
-        this.mouse.set(new PVector(mouse.x, mouse.y));
-        // this.dir = PVector.subi(this.mouse, this.locat);
         // INPUT CONTROL
         let rotateSpeed = 10;
         if (inputs.left)
@@ -248,20 +218,22 @@ class Player extends Mover {
             this.isMoving = true;
         else
             this.isMoving = false;
+        this.mouse.set(new PVector(mouse.x, mouse.y));
         this.dir.normalize();
         this.dir.mult(1);
         let lookAt = this.lookAt(this.mouse);
         lookAt.normalize();
         let d = PVector.disti(this.locat, this.mouse);
-        if (d <= this.range)
-            lookAt.mult(d);
+        if (d <= this.range + 20)
+            lookAt.mult(d - 20);
         else
             lookAt.mult(this.range);
         if (c) {
             c.beginPath();
-            c.arc(this.locat.x, this.locat.y, 110, 0, Math.PI * 2);
+            c.arc(this.locat.x, this.locat.y, this.range + 10, 0, Math.PI * 2);
             c.lineWidth = 5;
             c.fillStyle = "transparent";
+            c.strokeStyle = "black";
             c.stroke();
             c.fill();
         }
@@ -272,24 +244,52 @@ class Player extends Mover {
         if (this.isMoving)
             this.locat.add(this.velocity);
     }
+    shoot() {
+        console.log("Fire !");
+        let bullet = new Bullet();
+        bullets.push(bullet);
+    }
+}
+class Bullet extends Mover {
+    constructor() {
+        super();
+        this.locat = new PVector(player.locat.x, player.locat.y);
+        this.mouse.set(new PVector(mouse.x, mouse.y));
+        let lookAt = this.lookAt(this.mouse);
+        this.dir = lookAt;
+        this.dir.normalize();
+        this.dir.mult(10);
+        console.log("Bullet created");
+    }
+    move() {
+        // let lookAt = this.lookAt(this.mouse);
+        // lookAt.normalize()
+        // lookAt.mult(10)
+        // lookAt.mult(1.1)
+        // line(this.locat, lookAt, "violet");
+        line(this.locat, PVector.addi(this.locat, this.dir), "pink");
+        this.acceleration = this.dir;
+        this.velocity.add(this.acceleration);
+        this.velocity.limit(5);
+        this.locat.add(this.velocity);
+    }
 }
 const player = new Player();
-// let circleArray: Mover[] = [];
-// function init() {
-//     circleArray = [];
-//     for (let i = 0; i < 50; i++) {
-//         let circle = new Mover(i);
-//         circleArray.push(circle);
-//     }    
-// }
-// init();
-const v = new PVector(3, 3);
+let bullets = [];
+// let b = new Bullet();
+// bullets.push(b);
+document.addEventListener("mousedown", () => player.shoot());
+const v = new PVector(200, 200);
 v.normalize();
-v.mult(1.5);
-const u = PVector.multi(v, 2);
-const w = PVector.subi(v, u);
-w.div(3);
+v.mult(100);
+const u = new PVector(200, 100);
+u.normalize();
+u.mult(100);
+const w = new PVector(100, 200);
+w.normalize();
+w.mult(100);
 const center = new PVector(canvas.width / 2, canvas.height / 2);
+const Origin = new PVector(0, 0);
 // const mover = new Mover();
 function draw() {
     // for (let mover of circleArray) {
@@ -298,15 +298,21 @@ function draw() {
     //     mover.display();
     //     mover.findNearest(circleArray);
     // }
+    for (const bullet of bullets) {
+        bullet.update();
+        bullet.move();
+        // bullet.display();
+    }
+    player.update();
     player.move();
     player.display();
     mouseDisplay();
     // mover.update();
     // mover.checkEdges();
     // mover.display();
-    // line(center, v);
-    // line(center, u);
-    // line(center, w);
+    line(Origin, v, "red");
+    line(Origin, u, "green");
+    line(Origin, w, "yellow");
 }
 function animate() {
     requestAnimationFrame(animate);
@@ -317,25 +323,15 @@ function animate() {
     // console.log(inputs);
 }
 animate();
-// let mouse = {
-//     pos: {x: undefined, y:undefined},
-// };
-// window.addEventListener("mousemove", (e)=>{
-//     mouse.pos = getMousePos(canvas, e);
-// });
-// const mousePos = new PVector();
-// // // let betMC = new PVector();
-// // const locat = new PVector(100, 100);
-// // // const locat2 = new PVector(150, 100);
-// // const velocity = new PVector(1, 3.3);
-function line(startVector, endVector) {
+function line(startVector, endVector, color = "blue") {
     if (!c)
         return;
     c.beginPath();
     c.moveTo(startVector.x, startVector.y);
     c.lineTo(endVector.x, endVector.y);
     c.lineWidth = 5;
-    c.fillStyle = "blue";
+    c.fillStyle = color;
+    c.strokeStyle = color;
     c.stroke();
 }
 function mouseDisplay() {
