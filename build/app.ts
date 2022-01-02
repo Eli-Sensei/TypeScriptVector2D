@@ -354,13 +354,13 @@ const v = new PVector(200, 200);
 v.normalize();
 v.mult(100);
 
-const u = new PVector(200, 100);
+const u = new PVector(250, 100);
 u.normalize();
 u.mult(100)
 
-const w = new PVector(100, 200);
+const w = new PVector(150, 200);
 w.normalize();
-w.mult(100)
+w.mult(180)
 
 const center = new PVector(canvas.width / 2, canvas.height / 2);
 const Origin = new PVector(0, 0);
@@ -400,7 +400,7 @@ function draw() {
 
     line(Origin, v, "red");
     line(Origin, u, "green");
-    line(Origin, w, "yellow");
+    line(u, w, "yellow");
 }
 
 function animate() {
